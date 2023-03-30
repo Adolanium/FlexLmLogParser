@@ -8,7 +8,7 @@ namespace FlexLmLogParser
 {
     internal class Program
     {
-        public static List<LicenseUsage> ParseLogFile(string logFilePath)
+        public static List<LicenseUsage> ParseLogFile(string logFilePath, DateTime startDate, DateTime endDate)
         {
             List<LicenseUsage> licenseUsages = new List<LicenseUsage>();
             DateTime currentDate = DateTime.MinValue;
@@ -24,6 +24,10 @@ namespace FlexLmLogParser
                     if (timestampMatch.Success)
                     {
                         currentDate = DateTime.Parse(timestampMatch.Groups[2].Value);
+                        if (currentDate < startDate || currentDate > endDate)
+                        {
+                            break;
+                        }
                         continue;
                     }
 
@@ -60,12 +64,37 @@ namespace FlexLmLogParser
         {
             if (args.Length == 0)
             {
-                Console.WriteLine("Usage: FlexLmLogParser.exe <log file path>");
+                Console.WriteLine("Usage: FlexLMLogParser.exe -f <log file path> -s <start date> -e <end date>");
                 return;
             }
 
-            string logFilePath = args[0];
-            List<LicenseUsage> licenseUsages = ParseLogFile(logFilePath);
+            string logFilePath = null;
+            DateTime startDate = DateTime.MinValue;
+            DateTime endDate = DateTime.MaxValue;
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "-f")
+                {
+                    logFilePath = args[i + 1];
+                }
+                else if (args[i] == "-s")
+                {
+                    startDate = DateTime.Parse(args[i + 1]);
+                }
+                else if (args[i] == "-e")
+                {
+                    endDate = DateTime.Parse(args[i + 1]);
+                }
+            }
+
+            if (logFilePath == null)
+            {
+                Console.WriteLine("Usage: FlexLMLogParser.exe -f <log file path> -s <start date> -e <end date>");
+                return;
+            }
+
+            List<LicenseUsage> licenseUsages = ParseLogFile(logFilePath, startDate, endDate);
             RemoveEmptyLines(licenseUsages);
 
             var dateGroup = licenseUsages.GroupBy(usage => usage.Date);
