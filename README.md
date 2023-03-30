@@ -23,13 +23,13 @@ This is a C# program for parsing FlexLM log files to gather license usage statis
 FlexLMLogParser.exe -f <log file path> -s <start date> -e <end date>
 ```
 
+The "log file path" parameter is the path to the FlexLM license server log file that you want to parse. The "start date" and "end date" parameters specify the date range for the report. The dates should be specified in the format MM/dd/yyyy.
+
+
 Example Usage:
 ```
 FlexLMLogParser.exe -f "C:\FlexLM\lmgrd.log" -s 01/01/2023 -e 03/30/2023
 ```
-
-The "log file path" parameter is the path to the FlexLM license server log file that you want to parse. The "start date" and "end date" parameters specify the date range for the report. The dates should be specified in the format MM/dd/yyyy.
-
 
 ## Contributing
 
