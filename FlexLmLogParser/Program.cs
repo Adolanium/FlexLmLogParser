@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Microsoft.Win32;
 
 namespace FlexLmLogParser
 {
@@ -71,6 +72,7 @@ namespace FlexLmLogParser
             string logFilePath = null;
             DateTime startDate = DateTime.MinValue;
             DateTime endDate = DateTime.MaxValue;
+            string specificUser = null;
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -86,16 +88,25 @@ namespace FlexLmLogParser
                 {
                     endDate = DateTime.Parse(args[i + 1]);
                 }
+                else if (args[i] == "-u")
+                {
+                    specificUser = args[i + 1];
+                }
+
             }
 
             if (logFilePath == null)
             {
-                Console.WriteLine("Usage: FlexLMLogParser.exe -f <log file path> -s <start date> -e <end date>");
+                Console.WriteLine("Usage: FlexLMLogParser.exe -f <log file path> -s <start date> -e <end date> -u <user>");
                 return;
             }
 
             List<LicenseUsage> licenseUsages = ParseLogFile(logFilePath, startDate, endDate);
             RemoveEmptyLines(licenseUsages);
+            if (!string.IsNullOrEmpty(specificUser))
+            {
+                licenseUsages = licenseUsages.Where(usage => usage.User == specificUser).ToList();
+            }
 
             var dateGroup = licenseUsages.GroupBy(usage => usage.Date);
             foreach (var date in dateGroup)
