@@ -61,6 +61,20 @@ namespace FlexLmLogParser
             licenseUsages.RemoveAll(usage => usage.Time == "");
         }
 
+        public static void ExportToCsv(IEnumerable<LicenseUsage> licenseUsages, string outputFilePath)
+        {
+            using (StreamWriter writer = new StreamWriter(outputFilePath))
+            {
+                writer.WriteLine("Date,Time,License,User");
+
+                foreach (var usage in licenseUsages)
+                {
+                    writer.WriteLine("{0},{1},{2},{3}", usage.Date, usage.Time, usage.License, usage.User);
+                }
+            }
+        }
+
+
         static void Main(string[] args)
         {
             if (args.Length == 0)
@@ -73,6 +87,7 @@ namespace FlexLmLogParser
             DateTime startDate = DateTime.MinValue;
             DateTime endDate = DateTime.MaxValue;
             string specificUser = null;
+            string outputFile = null;
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -92,7 +107,10 @@ namespace FlexLmLogParser
                 {
                     specificUser = args[i + 1];
                 }
-
+                else if (args[i] == "-o")
+                {
+                    outputFile = args[i + 1];
+                }
             }
 
             if (logFilePath == null)
@@ -106,6 +124,10 @@ namespace FlexLmLogParser
             if (!string.IsNullOrEmpty(specificUser))
             {
                 licenseUsages = licenseUsages.Where(usage => usage.User == specificUser).ToList();
+            }
+            if (!string.IsNullOrEmpty(outputFile))
+            {
+                ExportToCsv(licenseUsages, outputFile);
             }
 
             var dateGroup = licenseUsages.GroupBy(usage => usage.Date);
