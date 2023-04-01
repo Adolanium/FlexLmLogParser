@@ -3,79 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.Win32;
 
 namespace FlexLmLogParser
 {
-    internal class Program
+    public class Program
     {
-        public static List<LicenseUsage> ParseLogFile(string logFilePath, DateTime startDate, DateTime endDate)
-        {
-            List<LicenseUsage> licenseUsages = new List<LicenseUsage>();
-            DateTime currentDate = DateTime.MinValue;
-
-            using (StreamReader reader = new StreamReader(logFilePath))
-            {
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    string timestampPattern = @"^(\d{2}:\d{2}:\d{2}) \(\w+\) TIMESTAMP (\d{1,2}/\d{1,2}/\d{4})";
-                    Match timestampMatch = Regex.Match(line, timestampPattern);
-
-                    if (timestampMatch.Success)
-                    {
-                        currentDate = DateTime.Parse(timestampMatch.Groups[2].Value);
-                        if (currentDate < startDate || currentDate > endDate)
-                        {
-                            break;
-                        }
-                        continue;
-                    }
-
-                    string usagePattern = @"^(\d{2}:\d{2}:\d{2}) \(\w+\) (OUT|IN): ""(\w+)"" (\w+@\w+-\w+)";
-                    Match usageMatch = Regex.Match(line, usagePattern);
-
-                    if (usageMatch.Success && currentDate != DateTime.MinValue)
-                    {
-                        LicenseUsage licenseUsage = new LicenseUsage();
-                        licenseUsage.Time = usageMatch.Groups[1].Value;
-                        licenseUsage.License = usageMatch.Groups[3].Value;
-                        licenseUsage.User = usageMatch.Groups[4].Value;
-                        licenseUsage.Date = currentDate;
-                        licenseUsages.Add(licenseUsage);
-                    }
-                }
-            }
-
-            return licenseUsages;
-        }
-
-        public static void RemoveEmptyLines(List<LicenseUsage> licenseUsages)
-        {
-            licenseUsages.RemoveAll(usage => usage.User == null);
-            licenseUsages.RemoveAll(usage => usage.License == null);
-            licenseUsages.RemoveAll(usage => usage.Time == null);
-            licenseUsages.RemoveAll(usage => usage.Date == DateTime.MinValue);
-            licenseUsages.RemoveAll(usage => usage.User == "");
-            licenseUsages.RemoveAll(usage => usage.License == "");
-            licenseUsages.RemoveAll(usage => usage.Time == "");
-        }
-
-        public static void ExportToCsv(IEnumerable<LicenseUsage> licenseUsages, string outputFilePath)
-        {
-            using (StreamWriter writer = new StreamWriter(outputFilePath))
-            {
-                writer.WriteLine("Date,Time,License,User");
-
-                foreach (var usage in licenseUsages)
-                {
-                    writer.WriteLine("{0},{1},{2},{3}", usage.Date, usage.Time, usage.License, usage.User);
-                }
-            }
-        }
-
-
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             if (args.Length == 0)
             {
@@ -125,6 +58,7 @@ namespace FlexLmLogParser
             {
                 licenseUsages = licenseUsages.Where(usage => usage.User == specificUser).ToList();
             }
+
             if (!string.IsNullOrEmpty(outputFile))
             {
                 ExportToCsv(licenseUsages, outputFile);
@@ -150,6 +84,72 @@ namespace FlexLmLogParser
                 Console.WriteLine();
                 Console.WriteLine("Total licenses used by license: {0}", date.GroupBy(usage => usage.License).Count());
                 Console.WriteLine();
+            }
+        }
+
+        private static List<LicenseUsage> ParseLogFile(string logFilePath, DateTime startDate, DateTime endDate)
+        {
+            List<LicenseUsage> licenseUsages = new List<LicenseUsage>();
+            DateTime currentDate = DateTime.MinValue;
+
+            using (StreamReader reader = new StreamReader(logFilePath))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    string timestampPattern = @"^(\d{2}:\d{2}:\d{2}) \(\w+\) TIMESTAMP (\d{1,2}/\d{1,2}/\d{4})";
+                    Match timestampMatch = Regex.Match(line, timestampPattern);
+
+                    if (timestampMatch.Success)
+                    {
+                        currentDate = DateTime.Parse(timestampMatch.Groups[2].Value);
+                        if (currentDate < startDate || currentDate > endDate)
+                        {
+                            break;
+                        }
+
+                        continue;
+                    }
+
+                    string usagePattern = @"^(\d{2}:\d{2}:\d{2}) \(\w+\) (OUT|IN): ""(\w+)"" (\w+@\w+-\w+)";
+                    Match usageMatch = Regex.Match(line, usagePattern);
+
+                    if (usageMatch.Success && currentDate != DateTime.MinValue)
+                    {
+                        LicenseUsage licenseUsage = new LicenseUsage();
+                        licenseUsage.Time = usageMatch.Groups[1].Value;
+                        licenseUsage.License = usageMatch.Groups[3].Value;
+                        licenseUsage.User = usageMatch.Groups[4].Value;
+                        licenseUsage.Date = currentDate;
+                        licenseUsages.Add(licenseUsage);
+                    }
+                }
+            }
+
+            return licenseUsages;
+        }
+
+        private static void RemoveEmptyLines(List<LicenseUsage> licenseUsages)
+        {
+            licenseUsages.RemoveAll(usage => usage.User == null);
+            licenseUsages.RemoveAll(usage => usage.License == null);
+            licenseUsages.RemoveAll(usage => usage.Time == null);
+            licenseUsages.RemoveAll(usage => usage.Date == DateTime.MinValue);
+            licenseUsages.RemoveAll(usage => usage.User == string.Empty);
+            licenseUsages.RemoveAll(usage => usage.License == string.Empty);
+            licenseUsages.RemoveAll(usage => usage.Time == string.Empty);
+        }
+
+        private static void ExportToCsv(IEnumerable<LicenseUsage> licenseUsages, string outputFilePath)
+        {
+            using (StreamWriter writer = new StreamWriter(outputFilePath))
+            {
+                writer.WriteLine("Date,Time,License,User");
+
+                foreach (var usage in licenseUsages)
+                {
+                    writer.WriteLine("{0},{1},{2},{3}", usage.Date, usage.Time, usage.License, usage.User);
+                }
             }
         }
     }
