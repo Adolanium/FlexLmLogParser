@@ -20,10 +20,10 @@ This is a C# program for parsing FlexLM log files to gather license usage statis
 4. Run the executable with the following argument:
 
 ```
-FlexLMLogParser.exe -f <log file path> -s <start date> -e <end date>
+FlexLMLogParser.exe -f <log file path> -s <start date> -e <end date> -u <user>
 ```
 
-The "log file path" parameter is the path to the FlexLM license server log file that you want to parse. The "start date" and "end date" parameters specify the date range for the report. The dates should be specified in the format MM/dd/yyyy.
+The "log file path" parameter is the path to the FlexLM license server log file that you want to parse. The "start date" and "end date" parameters specify the date range for the report. The dates should be specified in the format MM/dd/yyyy. The user should be specific in the format user@macine-name.
 
 
 Example Usage:
